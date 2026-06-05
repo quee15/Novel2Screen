@@ -13,7 +13,7 @@
       key: "upload",
       label: "小说上传与解析",
       eyebrow: "Source Intake",
-      description: "处理 TXT / DOCX 输入，展示章节解析结果，并标记下游模块刷新状态。",
+      description: "处理 TXT / DOCX 输入，展示章节解析结果，并标记下游模块刷新状。",
     },
     {
       key: "graph",
