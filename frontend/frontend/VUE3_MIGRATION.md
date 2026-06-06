@@ -24,7 +24,7 @@
 
 - `frontend/vue-app/`
 
-它对应你们后续要落地的正式架构：
+对应后续要落地的正式架构：
 
 - Vue3
 - Vue Router
@@ -59,7 +59,7 @@
 
 ## 推荐协作方式
 
-你负责前端时，可以优先做这些：
+负责前端时，可以优先做：
 
 1. 按 `vue-app/src/views/` 继续补页面
 2. 按 `src/services/modules/` 和队友约定 FastAPI 接口
