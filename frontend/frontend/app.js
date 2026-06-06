@@ -2,25 +2,6 @@
   const dataApi = window.Novel2ScreenData;
   const yamlApi = window.Novel2ScreenYaml;
 
-  // 缓存 DOM 查询结果，避免重复查询
-  const domCache = {
-    navList: null,
-    sidebarProject: null,
-    hero: null,
-    sectionBody: null,
-    toastStack: null,
-    fileInput: null,
-    uploadZone: null,
-    beatEditor: null,
-  };
-
-  function getCachedElement(id) {
-    if (!domCache[id]) {
-      domCache[id] = document.getElementById(id);
-    }
-    return domCache[id];
-  }
-
   const sectionDefinitions = [
     {
       key: "workspace",
@@ -124,33 +105,11 @@
   state.ui.pendingStyle = state.data.script.style;
 
   function escapeHtml(value) {
-    if (value === null || value === undefined) {
-      return "";
-    }
     return String(value)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#x27;");  // 增强：防止 XSS
-  }
-
-  function safeGet(obj, path, defaultValue) {
-    // 安全的深度属性访问
-    return path.split('.').reduce((acc, part) => {
-      return acc && acc[part] !== undefined ? acc[part] : defaultValue;
-    }, obj);
-  }
-
-  function safeNumber(value, defaultValue = 0) {
-    const num = Number(value);
-    return Number.isNaN(num) ? defaultValue : num;
-  }
-
-  function safeDate(value) {
-    if (!value) return null;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
+      .replace(/"/g, "&quot;");
   }
 
   function formatDate(value) {
@@ -158,9 +117,9 @@
       return "未记录";
     }
 
-    const date = safeDate(value);
-    if (!date) {
-      return String(value);
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
     }
 
     return new Intl.DateTimeFormat("zh-CN", {
@@ -172,7 +131,7 @@
   }
 
   function formatNumber(value) {
-    return new Intl.NumberFormat("zh-CN").format(safeNumber(value, 0));
+    return new Intl.NumberFormat("zh-CN").format(Number(value || 0));
   }
 
   function statusLabel(status) {
@@ -219,47 +178,29 @@
   }
 
   function ensureSelection() {
-    const scenes = state.data.script && state.data.script.scenes;
-    const characters = state.data.characters;
-
-    if (scenes && scenes.length > 0) {
-      const existingSceneIds = new Set(scenes.map((scene) => scene.id));
-      if (!state.ui.selectedSceneId || !existingSceneIds.has(state.ui.selectedSceneId)) {
-        state.ui.selectedSceneId = scenes[0].id;
-      }
-    } else {
-      state.ui.selectedSceneId = "";
+    const existingSceneIds = new Set(state.data.script.scenes.map((scene) => scene.id));
+    if (!existingSceneIds.has(state.ui.selectedSceneId)) {
+      state.ui.selectedSceneId = state.data.script.scenes[0] ? state.data.script.scenes[0].id : "";
     }
 
-    if (characters && characters.length > 0) {
-      const existingCharacterIds = new Set(characters.map((character) => character.id));
-      if (!state.ui.selectedCharacterId || !existingCharacterIds.has(state.ui.selectedCharacterId)) {
-        state.ui.selectedCharacterId = characters[0].id;
-      }
-    } else {
-      state.ui.selectedCharacterId = "";
-    }
-
-    const currentStyle = state.data.script && state.data.script.style;
-    if (currentStyle) {
-      state.ui.pendingStyle = currentStyle;
+    const existingCharacterIds = new Set(state.data.characters.map((character) => character.id));
+    if (!existingCharacterIds.has(state.ui.selectedCharacterId)) {
+      state.ui.selectedCharacterId = state.data.characters[0] ? state.data.characters[0].id : "";
     }
   }
 
   function getTask(type) {
-    if (!state.data.tasks) return null;
     return state.data.tasks.find((task) => task.type === type);
   }
 
   function updateTask(type, status, progress, message) {
     const task = getTask(type);
     if (!task) {
-      console.warn('Task not found:', type);
       return;
     }
 
     task.status = status;
-    task.progress = safeNumber(progress, 0);
+    task.progress = progress;
     task.message = message;
     task.updated_at = dataApi.nowIso();
   }
@@ -421,13 +362,10 @@
   }
 
   function renderNavigation() {
-    const navList = getCachedElement('navList');
-    if (!navList) return;
-
+    const navList = document.querySelector("#navList");
     navList.innerHTML = sectionDefinitions
       .map((section) => {
         const active = state.ui.activeSection === section.key ? "active" : "";
-        const index = sectionDefinitions.findIndex((item) => item.key === section.key);
         return (
           '<button class="nav-item ' +
           active +
@@ -435,7 +373,7 @@
           section.key +
           '" type="button">' +
           '<span class="nav-number">0' +
-          (index + 1) +
+          (sectionDefinitions.findIndex((item) => item.key === section.key) + 1) +
           "</span>" +
           '<span class="nav-copy"><strong>' +
           section.label +
@@ -449,9 +387,7 @@
   }
 
   function renderSidebarProject() {
-    const sidebar = getCachedElement('sidebarProject');
-    if (!sidebar) return;
-
+    const sidebar = document.querySelector("#sidebarProject");
     const progress = getProjectProgress();
     const currentTask = getCurrentTask();
 
@@ -494,9 +430,7 @@
   }
 
   function renderHero() {
-    const hero = getCachedElement('hero');
-    if (!hero) return;
-
+    const hero = document.querySelector("#hero");
     const progress = getProjectProgress();
     const currentTask = getCurrentTask();
     const section = sectionDefinitions.find((item) => item.key === state.ui.activeSection);
@@ -625,6 +559,7 @@
       "<li>已覆盖 README 中的 9 项核心能力展示路径，而不只是单纯页面占位。</li>" +
       "<li>当前支持小说上传解析、人物关系图谱、故事图谱、剧本改编、审校评分、分镜与导出联动。</li>" +
       "<li>人机协同创作通过在线编辑场次、动作、对白及顺序调整进行前端模拟。</li>" +
+      "<li>已在 <code>frontend/vue-app/</code> 补充 Vue3 + FastAPI 工程骨架，便于后续正式接后端。</li>" +
       "<li>YAML 预览遵守 Schema 1.0，并带结构校验和 stale 警告。</li>" +
       "</ul>" +
       "</section>" +
@@ -1333,31 +1268,39 @@
     );
   }
 
-  function bindSectionEvents() {}
-
   function renderSectionBody() {
-    const container = getCachedElement('sectionBody');
-    if (!container) return;
+    const container = document.querySelector("#sectionBody");
+    let content = "";
 
-    const renderers = {
-      workspace: renderWorkspaceSection,
-      upload: renderUploadSection,
-      graph: renderGraphSection,
-      script: renderScriptSection,
-      review: renderReviewSection,
-      storyboard: renderStoryboardSection,
-      export: renderExportSection,
-    };
+    switch (state.ui.activeSection) {
+      case "upload":
+        content = renderUploadSection();
+        break;
+      case "graph":
+        content = renderGraphSection();
+        break;
+      case "script":
+        content = renderScriptSection();
+        break;
+      case "review":
+        content = renderReviewSection();
+        break;
+      case "storyboard":
+        content = renderStoryboardSection();
+        break;
+      case "export":
+        content = renderExportSection();
+        break;
+      default:
+        content = renderWorkspaceSection();
+        break;
+    }
 
-    const renderer = renderers[state.ui.activeSection] || renderWorkspaceSection;
-    container.innerHTML = renderer();
-    bindSectionEvents();
+    container.innerHTML = content;
   }
 
   function renderToasts() {
-    const toastStack = getCachedElement('toastStack');
-    if (!toastStack) return;
-
+    const toastStack = document.querySelector("#toastStack");
     toastStack.innerHTML = state.ui.toasts
       .map(function (toast) {
         return '<div class="toast">' + escapeHtml(toast.message) + "</div>";
@@ -2011,17 +1954,6 @@
     if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
       handleUploadedFile(event.dataTransfer.files[0]);
     }
-  });
-
-  // 全局错误处理
-  window.addEventListener("error", function (event) {
-    console.error("Global error:", event.error);
-    pushToast("发生错误，请刷新页面重试");
-  });
-
-  window.addEventListener("unhandledrejection", function (event) {
-    console.error("Unhandled promise rejection:", event.reason);
-    pushToast("操作失败，请重试");
   });
 
   renderApp();
