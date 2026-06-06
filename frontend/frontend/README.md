@@ -1,6 +1,6 @@
 # Novel2Screen Frontend
 
-当前前端是一个可直接运行的零依赖静态单页应用，能力说明以根目录 `README.md` 中定义的核心功能为基准，并用页面原型形式串起完整产品流程。
+当前前端目录现在包含两套内容：一套是可直接运行的零依赖静态原型，另一套是面向 `Vue3 + FastAPI` 的正式工程骨架；两者都以根目录 `README.md` 中定义的核心功能为基准。
 
 ## 目录结构
 
@@ -11,6 +11,8 @@
 | `data.js` | 演示数据、图谱/剧本/分镜/评分生成逻辑 |
 | `yaml.js` | YAML 结构生成与 Schema 规则校验 |
 | `app.js` | 页面渲染、状态管理、交互逻辑、文件上传与工作流联动 |
+| `VUE3_MIGRATION.md` | 静态原型迁移到 Vue3 的映射说明 |
+| `vue-app/` | 面向 `Vue3 + FastAPI` 的正式前端工程骨架 |
 
 ## 当前能力
 
@@ -35,9 +37,10 @@
 
 ## 运行方式
 
-直接在浏览器里打开 `frontend/index.html`。
+1. 静态原型：直接在浏览器里打开 `frontend/index.html`
+2. Vue3 工程：进入 `frontend/vue-app/` 后执行 `npm install`、`npm run dev`
 
 ## 后续建议
 
 1. 接入真实后端时，优先把 `data.js` 中的模拟生成逻辑替换为 API 调用。
-2. 如果后续安装 Node.js，可以把当前这套结构迁移到 Vite + React + TypeScript，同时复用数据对象设计和页面布局。
+2. 如果后续正式按 `Vue3 + FastAPI` 开发，可直接在 `frontend/vue-app/` 基础上继续补视图、路由、状态和 API 模块。
