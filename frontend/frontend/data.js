@@ -60,11 +60,65 @@
   };
 
   function deepClone(value) {
-    return JSON.parse(JSON.stringify(value));
+    // 优化：处理特殊情况和循环引用
+    if (value === null || value === undefined) {
+      return value;
+    }
+
+    if (typeof value !== 'object') {
+      return value;
+    }
+
+    // 处理 Date 对象
+    if (value instanceof Date) {
+      return new Date(value.getTime());
+    }
+
+    // 处理数组
+    if (Array.isArray(value)) {
+      return value.map(item => deepClone(item));
+    }
+
+    // 处理普通对象
+    const cloned = {};
+    for (const key in value) {
+      if (value.hasOwnProperty(key)) {
+        cloned[key] = deepClone(value[key]);
+      }
+    }
+    return cloned;
   }
 
   function nowIso() {
     return new Date().toISOString();
+  }
+
+  // 数据验证辅助函数
+  function validateProjectStructure(project) {
+    const errors = [];
+
+    if (!project || typeof project !== 'object') {
+      errors.push('项目数据结构无效');
+      return errors;
+    }
+
+    if (!project.schema_version) {
+      errors.push('缺少 schema_version');
+    }
+
+    if (!project.project || !project.project.id) {
+      errors.push('缺少项目 ID');
+    }
+
+    if (!project.source || !Array.isArray(project.source.chapters)) {
+      errors.push('缺少章节数据');
+    }
+
+    if (!project.characters || !Array.isArray(project.characters)) {
+      errors.push('缺少人物数据');
+    }
+
+    return errors;
   }
 
   function createDemoProject() {

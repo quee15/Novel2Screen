@@ -27,6 +27,11 @@
   --radius-sm: 12px;
   --font-title: "Source Han Serif SC", "Noto Serif SC", "STSong", serif;
   --font-body: "Source Han Sans SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "Cascadia Code", "Consolas", monospace;
+  /* 新增：过渡动画 */
+  --transition-fast: 160ms ease;
+  --transition-normal: 380ms ease;
+  --transition-slow: 420ms ease;
 }
 
 * {
@@ -277,6 +282,7 @@ button {
   background: rgba(255, 255, 255, 0.08);
   color: #fffdf8;
   transform: translateX(4px);
+  transition: var(--transition-fast);
 }
 
 .nav-number {
@@ -352,7 +358,7 @@ button {
     linear-gradient(135deg, rgba(255, 253, 248, 0.82), rgba(247, 241, 227, 0.86)),
     var(--paper);
   box-shadow: var(--shadow-lg);
-  animation: rise-up 420ms ease;
+  animation: rise-up var(--transition-slow);
 }
 
 .hero-copy h2 {
@@ -542,7 +548,9 @@ button {
   border-radius: 14px;
   border: 1px solid transparent;
   font-weight: 700;
-  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+  transition: transform var(--transition-fast),
+              background var(--transition-fast),
+              border-color var(--transition-fast);
 }
 
 .primary-button {
